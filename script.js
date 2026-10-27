@@ -1,155 +1,129 @@
-const cars = [
-  {id:1,brand:"Porsche",model:"911 Carrera",year:2024,type:"Coupe",price:48500000,priceLabel:"PKR 4.85 crore",power:"388 hp",engine:"3.0L Twin-Turbo",drive:"RWD",tag:"ICONIC",image:"https://commons.wikimedia.org/wiki/Special:FilePath/2024_Porsche_911_992_Carrera.jpg?width=1200",description:"A timeless sports car with precise handling, sculpted design and an unmistakable driving character."},
-  {id:2,brand:"Mercedes-Benz",model:"G-Class",year:2024,type:"SUV",price:67500000,priceLabel:"PKR 6.75 crore",power:"416 hp",engine:"4.0L V8",drive:"AWD",tag:"SIGNATURE SUV",image:"https://commons.wikimedia.org/wiki/Special:FilePath/Mercedes-Benz_G_Class_W463.jpg?width=1200",description:"A bold luxury SUV that combines commanding presence with a beautifully appointed cabin."},
-  {id:3,brand:"BMW",model:"M4 Competition",year:2024,type:"Coupe",price:32500000,priceLabel:"PKR 3.25 crore",power:"503 hp",engine:"3.0L Twin-Turbo",drive:"RWD",tag:"PERFORMANCE",image:"https://commons.wikimedia.org/wiki/Special:FilePath/BMW_M4_(G82)_Competition_1X7A0305.jpg?width=1200",description:"Motorsport-inspired performance meets everyday refinement in this athletic coupe."},
-  {id:4,brand:"Range Rover",model:"Sport Autobiography",year:2024,type:"SUV",price:59000000,priceLabel:"PKR 5.90 crore",power:"523 hp",engine:"4.4L V8",drive:"AWD",tag:"REFINED",image:"https://commons.wikimedia.org/wiki/Special:FilePath/2023_Range_Rover_Sport.jpg?width=1200",description:"A sophisticated performance SUV designed around comfort, capability and modern luxury."},
-  {id:5,brand:"Audi",model:"RS e-tron GT",year:2024,type:"Sedan",price:42000000,priceLabel:"PKR 4.20 crore",power:"637 hp",engine:"Electric",drive:"AWD",tag:"ELECTRIC",image:"https://commons.wikimedia.org/wiki/Special:FilePath/Audi_RS_e-tron_GT.jpg?width=1200",description:"Progressive design and instant electric performance create a distinctly modern grand tourer."},
-  {id:6,brand:"Lexus",model:"LC 500 Convertible",year:2023,type:"Convertible",price:39500000,priceLabel:"PKR 3.95 crore",power:"471 hp",engine:"5.0L V8",drive:"RWD",tag:"OPEN-AIR",image:"https://commons.wikimedia.org/wiki/Special:FilePath/Lexus_LC500_Convertible.jpg?width=1200",description:"An expressive grand tourer with a naturally aspirated V8 and open-air character."}
+const products = [
+  {id:1,name:"The Everyday Blazer",category:"Clothing",price:128,badge:"Bestseller",image:"https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&w=800&q=85"},
+  {id:2,name:"Structured Shoulder Bag",category:"Accessories",price:94,badge:"New",image:"https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=800&q=85"},
+  {id:3,name:"Relaxed Cotton Shirt",category:"Clothing",price:68,badge:"Essential",image:"https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=800&q=85"},
+  {id:4,name:"Minimal Leather Sneaker",category:"Footwear",price:110,badge:"",image:"https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=800&q=85"},
+  {id:5,name:"Soft Knit Sweater",category:"Clothing",price:86,badge:"New",image:"https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&w=800&q=85"},
+  {id:6,name:"Everyday Sunglasses",category:"Accessories",price:54,badge:"",image:"https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=800&q=85"},
+  {id:7,name:"Modern Crossbody",category:"Accessories",price:78,badge:"Popular",image:"https://images.unsplash.com/photo-1590874692452-4e36a9e6f9d1?auto=format&fit=crop&w=800&q=85"},
+  {id:8,name:"Classic Low-Top",category:"Footwear",price:98,badge:"",image:"https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?auto=format&fit=crop&w=800&q=85"}
 ];
 
-const carGrid = document.getElementById("carGrid");
-const searchInput = document.getElementById("searchInput");
-const brandFilter = document.getElementById("brandFilter");
-const typeFilter = document.getElementById("typeFilter");
-const priceFilter = document.getElementById("priceFilter");
-const resultsCount = document.getElementById("resultsCount");
-const interestCar = document.getElementById("interestCar");
-const modal = document.getElementById("carModal");
+const productGrid = document.getElementById("productGrid");
+const filters = document.getElementById("filters");
+const sortSelect = document.getElementById("sortSelect");
+const cartDrawer = document.getElementById("cartDrawer");
+const overlay = document.getElementById("overlay");
+const cartItems = document.getElementById("cartItems");
+const cartCount = document.getElementById("cartCount");
+const cartTotal = document.getElementById("cartTotal");
 const toast = document.getElementById("toast");
-const whatsappNumber = "923001234567"; // Replace with your own WhatsApp number, country code included, no + or spaces.
-
-function formatPrice(price) {
-  if (price >= 10000000) return `PKR ${(price / 10000000).toFixed(2)} crore`;
-  return `PKR ${price.toLocaleString("en-PK")}`;
-}
-
-function populateFilters() {
-  [...new Set(cars.map(car => car.brand))].sort().forEach(brand => {
-    const option = document.createElement("option");
-    option.value = brand;
-    option.textContent = brand;
-    brandFilter.appendChild(option);
-  });
-  cars.forEach(car => {
-    const option = document.createElement("option");
-    option.value = `${car.brand} ${car.model}`;
-    option.textContent = `${car.brand} ${car.model}`;
-    interestCar.appendChild(option);
-  });
-}
-
-function renderCars() {
-  const query = searchInput.value.trim().toLowerCase();
-  const brand = brandFilter.value;
-  const type = typeFilter.value;
-  const maxPrice = priceFilter.value === "all" ? Infinity : Number(priceFilter.value);
-
-  const filtered = cars.filter(car => {
-    const matchesSearch = `${car.brand} ${car.model} ${car.year}`.toLowerCase().includes(query);
-    return matchesSearch && (brand === "all" || car.brand === brand) &&
-      (type === "all" || car.type === type) && car.price <= maxPrice;
-  });
-
-  resultsCount.textContent = `Showing ${filtered.length} of ${cars.length} vehicles`;
-  if (!filtered.length) {
-    carGrid.innerHTML = '<div class="empty-state"><h3>No vehicles found</h3><p>Try changing your search or filters.</p></div>';
-    return;
-  }
-
-  carGrid.innerHTML = filtered.map((car, index) => `
-    <article class="car-card" style="animation-delay:${index * 70}ms">
-      <div class="car-image-wrap">
-        <img src="${car.image}" alt="${car.year} ${car.brand} ${car.model}" loading="lazy">
-        <span class="car-tag">${car.tag}</span>
-      </div>
-      <div class="car-card-body">
-        <div class="car-meta"><span>${car.year} · ${car.type}</span><span>${car.drive}</span></div>
-        <h3>${car.brand} ${car.model}</h3>
-        <div class="spec-list"><span>◈ ${car.power}</span><span>⚙ ${car.engine}</span></div>
-        <div class="card-bottom"><span class="car-price">${formatPrice(car.price)}</span><button class="details-btn" data-car-id="${car.id}" type="button">View details ↗</button></div>
-      </div>
-    </article>`).join("");
-}
-
-function buildWhatsAppLink(message) {
-  return `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-}
-
-function openCarDetails(id) {
-  const car = cars.find(item => item.id === Number(id));
-  if (!car) return;
-  document.getElementById("modalImage").src = car.image;
-  document.getElementById("modalImage").alt = `${car.brand} ${car.model}`;
-  document.getElementById("modalTitle").textContent = `${car.brand} ${car.model}`;
-  document.getElementById("modalDescription").textContent = car.description;
-  document.getElementById("modalSpecs").innerHTML = `
-    <span>Year: <b>${car.year}</b></span><span>Body: <b>${car.type}</b></span>
-    <span>Power: <b>${car.power}</b></span><span>Engine: <b>${car.engine}</b></span>
-    <span>Drivetrain: <b>${car.drive}</b></span><span>Collection: <b>${car.tag}</b></span>`;
-  document.getElementById("modalPrice").textContent = formatPrice(car.price);
-  document.getElementById("modalWhatsApp").href = buildWhatsAppLink(`Hello AutoLux, I'm interested in the ${car.year} ${car.brand} ${car.model}. Please share more details.`);
-  modal.classList.add("open");
-  modal.setAttribute("aria-hidden", "false");
-  document.body.style.overflow = "hidden";
-  document.getElementById("modalClose").focus();
-}
-
-function closeModal() {
-  modal.classList.remove("open");
-  modal.setAttribute("aria-hidden", "true");
-  document.body.style.overflow = "";
-}
-
+let selectedCategory = "All";
+let cart = [];
 let toastTimer;
+
+function money(value) { return "$" + value.toFixed(0); }
 function showToast(message) {
   toast.textContent = message;
   toast.classList.add("show");
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.remove("show"), 3000);
+  toastTimer = setTimeout(() => toast.classList.remove("show"), 2200);
 }
-
-document.getElementById("menuToggle").addEventListener("click", () => {
-  const nav = document.getElementById("mainNav");
-  const isOpen = nav.classList.toggle("open");
-  document.getElementById("menuToggle").setAttribute("aria-expanded", String(isOpen));
-});
-document.querySelectorAll("#mainNav a").forEach(link => link.addEventListener("click", () => {
-  document.getElementById("mainNav").classList.remove("open");
-  document.getElementById("menuToggle").setAttribute("aria-expanded", "false");
-}));
-[searchInput, brandFilter, typeFilter, priceFilter].forEach(control => {
-  control.addEventListener(control === searchInput ? "input" : "change", renderCars);
-});
-document.getElementById("resetFilters").addEventListener("click", () => {
-  searchInput.value = "";
-  brandFilter.value = "all";
-  typeFilter.value = "all";
-  priceFilter.value = "all";
-  renderCars();
-});
-carGrid.addEventListener("click", event => {
-  const button = event.target.closest("[data-car-id]");
-  if (button) openCarDetails(button.dataset.carId);
-});
-document.getElementById("modalClose").addEventListener("click", closeModal);
-modal.addEventListener("click", event => { if (event.target === modal) closeModal(); });
-document.addEventListener("keydown", event => { if (event.key === "Escape") closeModal(); });
-
-document.getElementById("contactForm").addEventListener("submit", event => {
-  event.preventDefault();
-  const name = document.getElementById("customerName").value.trim();
-  const email = document.getElementById("customerEmail").value.trim();
-  const vehicle = interestCar.value;
-  const message = document.getElementById("customerMessage").value.trim();
-  if (name.length < 2 || !email || !message) {
-    showToast("Please complete all required fields.");
+function renderProducts() {
+  let shown = products.filter(p => selectedCategory === "All" || p.category === selectedCategory);
+  if (sortSelect.value === "low") shown.sort((a,b) => a.price - b.price);
+  if (sortSelect.value === "high") shown.sort((a,b) => b.price - a.price);
+  productGrid.innerHTML = shown.map(p => `
+    <article class="product-card">
+      <div class="product-image-wrap">
+        <img class="product-image" src="${p.image}" alt="${p.name}" loading="lazy" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&w=800&q=80'">
+        ${p.badge ? `<span class="product-badge">${p.badge}</span>` : ""}
+        <button class="add-button" data-add="${p.id}">Add to bag — ${money(p.price)} <span aria-hidden="true">＋</span></button>
+      </div>
+      <div class="product-meta"><span class="product-name">${p.name}</span><span class="product-price">${money(p.price)}</span></div>
+      <div class="product-category">${p.category}</div>
+    </article>`).join("");
+}
+function renderCart() {
+  const count = cart.reduce((sum,item) => sum + item.qty, 0);
+  const total = cart.reduce((sum,item) => sum + item.price * item.qty, 0);
+  cartCount.textContent = count;
+  cartTotal.textContent = money(total);
+  if (!cart.length) {
+    cartItems.innerHTML = '<p class="empty-cart">Your bag is looking a little empty.</p>';
     return;
   }
-  const enquiry = `Hello AutoLux, my name is ${name}. Email: ${email}. Vehicle of interest: ${vehicle}. Message: ${message}`;
-  window.open(buildWhatsAppLink(enquiry), "_blank", "noopener,noreferrer");
-  showToast("Your enquiry message is ready in WhatsApp.");
+  cartItems.innerHTML = cart.map(item => `
+    <div class="cart-item">
+      <img src="${item.image}" alt="">
+      <div><strong>${item.name}</strong><small>${money(item.price)} · Qty ${item.qty}</small></div>
+      <button class="remove-item" data-remove="${item.id}" aria-label="Remove ${item.name}">Remove</button>
+    </div>`).join("");
+}
+function openCart() {
+  cartDrawer.classList.add("open");
+  overlay.classList.add("show");
+  cartDrawer.setAttribute("aria-hidden","false");
+  document.body.style.overflow = "hidden";
+}
+function closeCart() {
+  cartDrawer.classList.remove("open");
+  overlay.classList.remove("show");
+  cartDrawer.setAttribute("aria-hidden","true");
+  document.body.style.overflow = "";
+}
+filters.addEventListener("click", event => {
+  const button = event.target.closest("[data-category]");
+  if (!button) return;
+  selectedCategory = button.dataset.category;
+  filters.querySelectorAll(".filter").forEach(item => item.classList.toggle("active", item === button));
+  renderProducts();
 });
-document.getElementById("whatsappFloat").href = buildWhatsAppLink("Hello AutoLux, I'd like to enquire about your car collection.");
-
-populateFilters();
-renderCars();
+sortSelect.addEventListener("change", renderProducts);
+productGrid.addEventListener("click", event => {
+  const button = event.target.closest("[data-add]");
+  if (!button) return;
+  const product = products.find(p => p.id === Number(button.dataset.add));
+  const existing = cart.find(item => item.id === product.id);
+  if (existing) existing.qty += 1;
+  else cart.push({...product, qty:1});
+  renderCart();
+  showToast(`${product.name} added to your bag`);
+});
+document.getElementById("cartButton").addEventListener("click", openCart);
+document.getElementById("closeCart").addEventListener("click", closeCart);
+document.getElementById("continueShopping").addEventListener("click", closeCart);
+overlay.addEventListener("click", closeCart);
+cartItems.addEventListener("click", event => {
+  const button = event.target.closest("[data-remove]");
+  if (!button) return;
+  cart = cart.filter(item => item.id !== Number(button.dataset.remove));
+  renderCart();
+});
+document.getElementById("checkoutButton").addEventListener("click", () => {
+  if (!cart.length) { showToast("Add a piece to your bag first."); return; }
+  showToast("Demo checkout — connect a payment provider to accept orders.");
+});
+document.getElementById("newsletterForm").addEventListener("submit", event => {
+  event.preventDefault();
+  const email = document.getElementById("emailInput").value.trim();
+  if (!email) return;
+  document.getElementById("newsletterMessage").textContent = "Thanks for joining the Luxe Letter!";
+  event.target.reset();
+});
+const menuToggle = document.getElementById("menuToggle");
+const nav = document.getElementById("nav");
+menuToggle.addEventListener("click", () => {
+  const open = nav.classList.toggle("open");
+  menuToggle.setAttribute("aria-expanded", String(open));
+  menuToggle.setAttribute("aria-label", open ? "Close navigation" : "Open navigation");
+  menuToggle.textContent = open ? "×" : "☰";
+});
+nav.querySelectorAll("a").forEach(link => link.addEventListener("click", () => {
+  nav.classList.remove("open");
+  menuToggle.setAttribute("aria-expanded","false");
+  menuToggle.textContent = "☰";
+}));
+document.addEventListener("keydown", event => { if (event.key === "Escape") closeCart(); });
+renderProducts();
+renderCart();
